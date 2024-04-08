@@ -1,3 +1,9 @@
+COLOR_MAP = [
+    'SUCCESS': 'good',
+    'FAILURE': 'danger',
+]
+
+
 pipeline {
     agent any
 
@@ -47,6 +53,14 @@ pipeline {
             steps {
                 nexusArtifactUploader artifacts: [[artifactId: 'earth-app', classifier: '', file: '/var/lib/jenkins/workspace/second-job/target/earth-app-1.0-SNAPSHOT.war', type: 'war']], credentialsId: 'nexus-id', groupId: 'com.devops.maven', nexusUrl: '16.16.209.247:8081', nexusVersion: 'nexus3', protocol: 'http', repository: 'maven-build-snapshot', version: '1.0-SNAPSHOT'
             }
+        }
+      }
+
+      post {
+        always {
+            slackSend channel: 'success-group', 
+                      color: COLOR_MAP[currentBuild.currentResult],
+                      message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER}"
         }
       }
     }
