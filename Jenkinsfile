@@ -14,5 +14,11 @@ pipeline {
                 git 'https://github.com/Dacosta29/maven-build-website.git'
             }
         }
+
+        stage ("build") {
+            steps {
+                sh 'mvn clean'
+            }
+        }
       }
     }
