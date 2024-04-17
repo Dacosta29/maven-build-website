@@ -15,22 +15,15 @@ pipeline {
             }
         }
 
-        stage ("build") {
+        stage ("build with maven") {
             steps {
-                sh 'mvn clean'
-            }
-        }
-
-        stage ("test") {
-            steps {
-                sh 'mvn test'
-            }
-        }
-
-        stage ("package") {
-            steps {
-                sh 'mvn package'
+                sh'''
+                mvn clean
+                mvn test
+                mvn package
+                '''
             }
         }
       }
     }
+
