@@ -1,6 +1,13 @@
+COLOR_MAP = [
+    'SUCCESS': 'good',
+    'FAILURE': 'danger',
+]
+
 
 pipeline {
-    agent any
+    agent {
+        label 'agent-server'
+    }
 
     tools {
         maven "maven3.9.6"
@@ -23,27 +30,39 @@ pipeline {
             }
         }
 
-        stage('Docker Build') {
-            steps {
-                sh "docker build -t dacosta29/maven-build-website:latest ."
+        stage ('SonarQube Analysis') {
+            environment {
+                ScannerHome = tool 'sonar5.0'
             }
-        }
-
-        stage('Docker Push') {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'docker-credentials', toolName: 'Docker') {
-                        sh "docker push dacosta29/maven-build-website:latest"
+                    withSonarQubeEnv('sonarqube') {
+                        sh "${ScannerHome}/bin/sonar-scanner -Dsonar.projectKey=jomacs"
                     }
                 }
             }
         }
 
-        stage('Docker Run') {
+        stage("Quality Gate") {
             steps {
-                sh "docker run -d -p 8090:8080 dacosta29/maven-build-website:latest"
+              timeout(time: 1, unit: 'HOURS') {
+                waitForQualityGate abortPipeline: true
+              }
+            }
+        }
+
+        stage ('upload to nexus') {
+            steps {
+                nexusArtifactUploader artifacts: [[artifactId: 'earth-app', classifier: '', file: '/var/lib/jenkins/workspace/second-job/target/earth-app-1.0-SNAPSHOT.war', type: 'war']], credentialsId: 'nexus-id', groupId: 'com.devops.maven', nexusUrl: '16.16.209.247:8081', nexusVersion: 'nexus3', protocol: 'http', repository: 'maven-build-snapshot', version: '1.0-SNAPSHOT'
             }
         }
       }
-    }
 
+      post {
+        always {
+            slackSend channel: 'success-group', 
+                      color: COLOR_MAP[currentBuild.currentResult],
+                      message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER}"
+        }
+      }
+    }
