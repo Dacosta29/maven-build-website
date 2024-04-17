@@ -38,6 +38,12 @@ pipeline {
                 }
             }
         }
+
+        stage('Docker Run') {
+            steps {
+                sh "docker run -d -p 8090:8080 dacosta29/maven-build-website:latest"
+            }
+        }
       }
     }
 
