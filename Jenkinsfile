@@ -24,6 +24,12 @@ pipeline {
                 '''
             }
         }
+
+        stage('Docker Build') {
+            steps {
+                sh "docker build -t dacosta29/maven-build-website:latest ."
+            }
+        }
       }
     }
 
