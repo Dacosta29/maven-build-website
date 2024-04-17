@@ -28,6 +28,16 @@ pipeline {
                 sh "docker build -t dacosta29/maven-build-website:latest ."
             }
         }
+
+        stage('Docker Push') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'docker-credentials', toolName: 'Docker') {
+                        sh "docker push dacosta29/maven-build-website:latest"
+                    }
+                }
+            }
+        }
       }
     }
 
